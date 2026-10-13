@@ -7,7 +7,7 @@
 | **Current document** | [Slovensky](README_SK.md) | [Українська](README_UA.md) | [Русский](README_RU.md) |
 
 <p align="center">
-  <img src="Project_1/ALL.png" alt="Comparison of PID, LQR and Fuzzy-PI responses for a 150 degree reference" width="900">
+  <img width="2238" height="1170" alt="ALL" src="https://github.com/user-attachments/assets/b99b1e08-b2c0-4087-acc9-326fef248a6d" />
 </p>
 
 ## Contents
@@ -152,7 +152,7 @@ The numerical values above are taken from the project source and follow the moto
 ### PID branch
 
 <p align="center">
-  <img src="Project_1/PID_Scheme.png" alt="PID Simulink scheme" width="850">
+  <img width="793" height="147" alt="PID_Scheme" src="https://github.com/user-attachments/assets/23735932-f219-45c6-88d0-50e975695eab" />
 </p>
 
 The script creates the plant with `tf` and obtains the controller programmatically:
@@ -171,7 +171,7 @@ This is not trial-and-error: `pidtune` designs a PID controller for the linear m
 ### LQR branch
 
 <p align="center">
-  <img src="Project_1/LQR/LQR_Scheme.png" alt="LQR Simulink scheme" width="850">
+  <img width="1360" height="217" alt="LQR_Scheme" src="https://github.com/user-attachments/assets/e7e5f1f7-9897-424f-a535-fc09efdf6fab" />
 </p>
 
 The project uses full-state feedback and calculates `K_lqr` with MATLAB's `lqr` function.
@@ -187,7 +187,7 @@ The matrix `Q` weights current, speed, and angle equally in this experiment. The
 ### Fuzzy-PI branch
 
 <p align="center">
-  <img src="Project_1/Fuzzy_Scheme.png" alt="Fuzzy-PI Simulink scheme" width="850">
+  <img width="1546" height="217" alt="Fuzzy_Scheme" src="https://github.com/user-attachments/assets/ea786de8-078d-4e58-b375-f1f0c505e5b9" />
 </p>
 
 `Fuzzy_PI.fis` defines a Mamdani FIS with `min` implication, `max` aggregation, and centroid defuzzification. The script loads it through `readfis` and sets the following scales:
@@ -247,7 +247,7 @@ When comparing controllers, use the same reference and simulation configuration.
 The checked-in comparison plot uses `Deg = 150`, i.e. $150\pi/180 \approx 2.618$ rad.
 
 <p align="center">
-  <img src="Project_1/ALL.png" alt="PID LQR and Fuzzy-PI response comparison" width="950">
+  <img width="2238" height="1170" alt="ALL" src="https://github.com/user-attachments/assets/2fff9ea7-b040-4d7c-9ff3-ae9a578ca18f" />
 </p>
 
 | Controller | Observation from the included plot | Interpretation |
@@ -300,17 +300,10 @@ The Simulink **Tune...** button can require a Simulink Control Design license. T
 RMS/
 ├── README.md                         # English documentation
 ├── README_SK.md                      # Slovak overview
-├── README_UA.md                      # Ukrainian overview
-├── README_RU.md                      # Russian overview
 └── Project_1/
     ├── Zadanie_1.m                   # Parameters, plant, controller design
     ├── Zadanie_1_sim.slx             # Simulink model
     ├── Fuzzy_PI.fis                  # Mamdani Fuzzy-PI inference system
-    ├── ALL.png                       # PID/LQR/Fuzzy-PI comparison plot
-    ├── PID_Scheme.png                # PID branch diagram
-    ├── Fuzzy_Scheme.png              # Fuzzy-PI branch diagram
-    ├── LQR/                          # LQR diagram and plot
-    └── PID/                          # Exported PID response plots and figures
 ```
 
 ## Limitations
