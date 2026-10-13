@@ -1,0 +1,337 @@
+# DC Servo Antenna Position Control
+
+> MATLAB/Simulink study project for the **RMS** course: modelling the angular position of a DC servo motor used as an antenna drive, then comparing PID, LQR, and Fuzzy-PI control.
+
+| English | Slovak | Ukrainian | Russian |
+| :---: | :---: | :---: | :---: |
+| **Current document** | [Slovensky](README_SK.md) | [Українська](README_UA.md) | [Русский](README_RU.md) |
+
+<p align="center">
+  <img src="Project_1/ALL.png" alt="Comparison of PID, LQR and Fuzzy-PI responses for a 150 degree reference" width="900">
+</p>
+
+## Contents
+
+- [Project goal](#project-goal)
+- [Scientific basis](#scientific-basis)
+- [Learning map: technologies and concepts](#learning-map-technologies-and-concepts)
+- [Mathematical model](#mathematical-model)
+- [Controllers](#controllers)
+- [Repository implementation](#repository-implementation)
+- [Parameters and tuning logic](#parameters-and-tuning-logic)
+- [Results and interpretation](#results-and-interpretation)
+- [Getting started](#getting-started)
+- [Repository structure](#repository-structure)
+- [Limitations](#limitations)
+- [References](#references)
+
+## Project goal
+
+This repository is my implementation of a DC servo motor antenna-positioning task. The model accepts a desired antenna angle and simulates the motor position. I used it to explore three approaches to feedback control:
+
+1. **PID** - an automatically tuned, filtered parallel PID controller;
+2. **LQR** - full-state feedback designed from a continuous-time state-space model;
+3. **Fuzzy-PI** - a Mamdani inference system that adapts proportional and integral gains from the position error and its change.
+
+The project is intended as a first practical introduction to control engineering: derive a plant model, create an executable simulation, tune controllers, and compare reference tracking rather than treating controller gains as arbitrary constants.
+
+[Back to contents](#contents)
+
+## Scientific basis
+
+The model is based on the article by Fkirin and Khira, *Enhanced Antenna Positioning Control System Using Adapted DC Servo Motor and Fuzzy-PI Controller* (IEEE Access, 2023) [1]. The paper studies a ground-data-receiving-station antenna driven by a T-36001 DC servo motor and compares PID, LQR, and Fuzzy-PI approaches.
+
+This repository implements the article's modelling idea and controller families for an educational MATLAB/Simulink experiment. It is **not** a claim of hardware validation or an exact reproduction of every controller setting and result in the paper. In particular, the LQR weighting `R = 10`, PID crossover frequency, and Fuzzy-PI scaling values are the settings used in this project and are documented below.
+
+The included paper is distributed under its stated Creative Commons Attribution-NonCommercial-NoDerivatives license. Please cite the original authors when reusing its ideas or the unmodified paper.
+
+[Back to contents](#contents)
+
+## Learning map: technologies and concepts
+
+| Topic | What it means | Where to see it in this repository |
+|---|---|---|
+| MATLAB | Numerical environment used to define parameters, transfer functions, state-space models, and controllers. | [`Zadanie_1.m`](Project_1/Zadanie_1.m) |
+| Simulink | Block-diagram environment used to assemble the feedback loops and run time-domain simulations. [2] | [`Zadanie_1_sim.slx`](Project_1/Zadanie_1_sim.slx) |
+| Transfer function | Input-output description in the Laplace domain: `G(s) = Theta(s)/Va(s)`. | `num`, `den`, and `G = tf(num,den)` |
+| State-space model | First-order vector model `xdot = Ax + Bu`, `y = Cx + Du`; needed for LQR. | `A`, `B`, `C`, `D` in `Zadanie_1.m` |
+| PID control | Feedback law built from proportional, integral, and derivative actions. [3][4] | PID branch of the model |
+| LQR | State-feedback method minimizing a quadratic trade-off between state error and control effort. [5] | LQR branch and `lqr(A,B,Q,R)` |
+| Fuzzy inference | Rule-based controller using linguistic membership functions and Mamdani inference. [6] | [`Fuzzy_PI.fis`](Project_1/Fuzzy_PI.fis) |
+| Validation by simulation | Compare reference tracking, overshoot, oscillation, and settling behaviour before hardware testing. | [`ALL.png`](Project_1/ALL.png) |
+
+### MATLAB and Simulink
+
+MATLAB provides the numerical model and controller-design commands. Simulink turns the equations into connected blocks, so signals and feedback paths can be inspected visually. This is a Model-Based Design workflow: the same model is used to formulate, simulate, and examine the system before any physical implementation. [2]
+
+### Transfer functions and state variables
+
+A transfer function is useful when the main question is: *how does output position change when armature voltage changes?* A state-space model is useful when internal variables such as armature current and angular velocity also matter. Here the state vector is
+
+$$x = \begin{bmatrix} i_a & \omega & \theta \end{bmatrix}^{T},$$
+
+where $i_a$ is armature current, $\omega$ is angular velocity, and $\theta$ is angular position in radians.
+
+### PID control in plain language
+
+For error $e(t)=r(t)-\theta(t)$, a parallel continuous-time PID controller is
+
+$$u(t)=K_p e(t)+K_i\int_0^t e(\tau)\,d\tau+K_d\frac{de(t)}{dt}.$$
+
+- $K_p$ responds to the current error and usually makes the response faster.
+- $K_i$ accumulates past error and can remove steady-state offset, but too much integral action can cause overshoot or a slow oscillatory tail.
+- $K_d$ reacts to the error trend and can add damping; practical implementations filter the derivative because differentiation amplifies high-frequency noise.
+
+The MATLAB `pid` representation used by `pidtune` includes a first-order derivative filter [4]:
+
+$$C(s)=K_p+\frac{K_i}{s}+\frac{K_d s}{T_f s+1}.$$
+
+### LQR in plain language
+
+LQR chooses the state-feedback input $u=-Kx$ to minimize
+
+$$J=\int_0^\infty \left(x^TQx+u^TRu\right)dt.$$
+
+`Q` expresses how strongly each state deviation is penalized; `R` expresses how expensive large control input is. MATLAB computes the gain `K` from the associated Riccati equation. [5] LQR assumes that the states used for feedback are available or estimated.
+
+### Fuzzy-PI in plain language
+
+Fuzzy logic replaces one fixed formula for the gains with rules such as “if error is positive high and changing quickly, use a high/low gain.” The controller here has two inputs - `Error` and `ChangeError` - and two outputs - normalized `Kp` and `Ki`. It uses seven Gaussian membership functions for each input and 49 Mamdani rules. The actual gains are recovered by output scaling:
+
+$$K_p(t)=G_{Kp}K_{p,\mathrm{fuzzy}}(t),\qquad
+K_i(t)=G_{Ki}K_{i,\mathrm{fuzzy}}(t).$$
+
+[Back to contents](#contents)
+
+## Mathematical model
+
+The armature circuit and mechanical dynamics are represented by
+
+$$V_a(t)=R_a i_a(t)+L_a\frac{di_a(t)}{dt}+K_b\omega(t),$$
+
+$$J_m\frac{d\omega(t)}{dt}+B_m\omega(t)=K_t i_a(t),\qquad \dot{\theta}(t)=\omega(t).$$
+
+With zero initial conditions, the voltage-to-position transfer function is [1]
+
+$$G(s)=\frac{\Theta(s)}{V_a(s)}=
+\frac{K_t}{s\left[(R_a+L_a s)(J_m s+B_m)+K_tK_b\right]}.$$
+
+The equivalent state-space representation used for the LQR experiment is
+
+$$\dot{x}=Ax+Bu,\qquad y=Cx+Du,$$
+
+$$A=\begin{bmatrix}
+-R_a/L_a & -K_b/L_a & 0\\
+K_t/J_m & -B_m/J_m & 0\\
+0 & 1 & 0
+\end{bmatrix},\quad
+B=\begin{bmatrix}1/L_a\\0\\0\end{bmatrix},\quad
+C=\begin{bmatrix}0&0&180/\pi\end{bmatrix}.$$
+
+`C` converts the simulated position from radians to degrees for the state-space output. The project keeps the physical controller model in radians: `Deg` is the human-readable target in degrees, while `Ref = Deg*pi/180` is the corresponding simulation reference in radians.
+
+### Motor data used
+
+| Symbol | Meaning | Value used in code |
+|---|---|---:|
+| $R_a$ | Armature resistance | 13.3 Ohm |
+| $L_a$ | Armature inductance | 29 H |
+| $J_m$ | Rotor inertia | 51.386 |
+| $J_a$ | Load inertia (declared for the study) | 3.5946 |
+| $B_m$ | Viscous friction coefficient | 13.558 |
+| $K_t$ | Torque constant | 138 |
+| $K_b$ | Back-EMF constant | 187 |
+| `Deg` | Default reference angle | 150 deg |
+
+The numerical values above are taken from the project source and follow the motor data used as the paper's basis. Consult the cited paper for the original context and units. [1]
+
+[Back to contents](#contents)
+
+## Controllers
+
+### PID branch
+
+<p align="center">
+  <img src="Project_1/PID_Scheme.png" alt="PID Simulink scheme" width="850">
+</p>
+
+The script creates the plant with `tf` and obtains the controller programmatically:
+
+```matlab
+wc = 0.5;                     % target crossover frequency [rad/s]
+C_pid = pidtune(G, 'PID', wc);
+
+Kp = C_pid.Kp;
+Ki = C_pid.Ki;
+Kd = C_pid.Kd;
+```
+
+This is not trial-and-error: `pidtune` designs a PID controller for the linear model and aims to balance performance and robustness. [3][7] The gains are intentionally not hard-coded; they are recomputed from the current plant whenever the script runs.
+
+### LQR branch
+
+<p align="center">
+  <img src="Project_1/LQR/LQR_Scheme.png" alt="LQR Simulink scheme" width="850">
+</p>
+
+The project uses full-state feedback and calculates `K_lqr` with MATLAB's `lqr` function.
+
+```matlab
+Q = 1e6 * eye(3);
+R = 10;
+K_lqr = lqr(A, B, Q, R);
+```
+
+The matrix `Q` weights current, speed, and angle equally in this experiment. The scalar `R=10` is the control-effort weight selected for this repository's response study. Changing either matrix changes the trade-off and therefore the gain and response.
+
+### Fuzzy-PI branch
+
+<p align="center">
+  <img src="Project_1/Fuzzy_Scheme.png" alt="Fuzzy-PI Simulink scheme" width="850">
+</p>
+
+`Fuzzy_PI.fis` defines a Mamdani FIS with `min` implication, `max` aggregation, and centroid defuzzification. The script loads it through `readfis` and sets the following scales:
+
+```matlab
+Ge  = 1/Ref;
+Gde = 0.8;
+GKp = 130;
+GKi = 20;
+```
+
+The two input variables are normalized error and error change. The FIS output is mapped back to time-varying PI gains by `GKp` and `GKi`.
+
+[Back to contents](#contents)
+
+## Repository implementation
+
+The central workflow is:
+
+```text
+Motor parameters --> G(s), A/B/C/D --> controller design --> Simulink model
+                                                               |
+Reference angle (Deg --> Ref in rad) --------------------------+
+                                                               |
+                                                        Scope / plots
+```
+
+1. `Zadanie_1.m` clears the workspace, declares the motor constants, and converts the desired angle from degrees to radians.
+2. It creates both `G` and the `A,B,C,D` state-space model.
+3. It computes the PID gains through `pidtune`, the LQR gain through `lqr`, and loads the Fuzzy-PI FIS if available.
+4. `Zadanie_1_sim.slx` uses these workspace variables in its controller blocks.
+5. The scopes and exported plots show reference and motor position.
+
+The project contains MATLAB `.fig` files as editable figures and `.png` files as portable previews.
+
+[Back to contents](#contents)
+
+## Parameters and tuning logic
+
+| Controller | Parameters in this implementation | Selection logic | Reproducibility note |
+|---|---|---|---|
+| PID | `type='PID'`, `wc=0.5 rad/s` | Automatic model-based tuning with `pidtune(G,'PID',wc)`. | Run `Zadanie_1.m`; inspect the printed `Kp`, `Ki`, `Kd`. |
+| LQR | `Q=1e6*eye(3)`, `R=10` | `Q` penalizes state deviation; `R` penalizes control effort. `lqr` solves the continuous-time LQR problem. | The script recomputes `K_lqr`. |
+| Fuzzy-PI | `Ge=1/Ref`, `Gde=0.8`, `GKp=130`, `GKi=20`; 49 rules | Normalize the input domain, infer normalized gains, then scale them. | The `.fis` file must be in the MATLAB current folder. |
+
+When comparing controllers, use the same reference and simulation configuration. Look at:
+
+- **Rise time**: how quickly the response first approaches the target;
+- **Overshoot**: how far the response goes beyond the target;
+- **Settling**: how quickly the response remains near the target;
+- **Control effort**: whether the demanded voltage/control signal would be practical for a real actuator.
+
+[Back to contents](#contents)
+
+## Results and interpretation
+
+The checked-in comparison plot uses `Deg = 150`, i.e. $150\pi/180 \approx 2.618$ rad.
+
+<p align="center">
+  <img src="Project_1/ALL.png" alt="PID LQR and Fuzzy-PI response comparison" width="950">
+</p>
+
+| Controller | Observation from the included plot | Interpretation |
+|---|---|---|
+| PID | Fast initial response, but the largest visible overshoot and decaying oscillation in this configuration. | A faster loop is not automatically a better loop; transient constraints matter. |
+| LQR | Reaches the reference with the smallest visible overshoot for the checked-in `Q` and `R`. | The chosen quadratic weights strongly penalize state error relative to input effort. |
+| Fuzzy-PI | Tracks the reference with a smoother initial rise than the checked-in PID curve, while still showing overshoot. | Adaptive gains change the transient behaviour; performance depends on rule base and scaling. |
+
+These statements describe the **included simulation plot only**. They are not universal rankings of PID, LQR, and Fuzzy-PI controllers, and they do not replace metrics produced by a controlled parameter sweep or hardware experiment. The source paper reports its own experimental comparison under its own settings. [1]
+
+[Back to contents](#contents)
+
+## Getting started
+
+### Requirements
+
+- MATLAB with **Control System Toolbox** (`tf`, `ss`, `pidtune`, `lqr`);
+- Simulink;
+- **Fuzzy Logic Toolbox** to load and simulate `Fuzzy_PI.fis` / the fuzzy controller branch.
+
+### Run the study
+
+1. Clone or download this repository.
+2. In MATLAB, set the Current Folder to `Project_1`.
+3. Run:
+
+   ```matlab
+   Zadanie_1
+   ```
+
+4. Open `Zadanie_1_sim.slx`.
+5. Run the simulation and inspect the scopes.
+6. To test a different target angle, edit only:
+
+   ```matlab
+   Deg = 150;
+   ```
+
+   The script automatically sets `Ref = Deg*pi/180` so that the model receives radians.
+
+### Important note about PID Tuner
+
+The Simulink **Tune...** button can require a Simulink Control Design license. This repository does not depend on that interactive app: it uses the `pidtune` command on the LTI plant. If `pidtune` is unavailable in a local installation, the PID branch cannot be regenerated automatically; use an installation that includes Control System Toolbox.
+
+[Back to contents](#contents)
+
+## Repository structure
+
+```text
+RMS/
+├── README.md                         # English documentation
+├── README_SK.md                      # Slovak overview
+├── README_UA.md                      # Ukrainian overview
+├── README_RU.md                      # Russian overview
+└── Project_1/
+    ├── Zadanie_1.m                   # Parameters, plant, controller design
+    ├── Zadanie_1_sim.slx             # Simulink model
+    ├── Fuzzy_PI.fis                  # Mamdani Fuzzy-PI inference system
+    ├── ALL.png                       # PID/LQR/Fuzzy-PI comparison plot
+    ├── PID_Scheme.png                # PID branch diagram
+    ├── Fuzzy_Scheme.png              # Fuzzy-PI branch diagram
+    ├── LQR/                          # LQR diagram and plot
+    └── PID/                          # Exported PID response plots and figures
+```
+
+## Limitations
+
+- This is a simulation study, not a real-time hardware controller.
+- The plant is linear and does not include actuator saturation, sensor noise, gear backlash, parameter uncertainty, or load disturbances unless added by the user.
+- LQR full-state feedback assumes the required states are measured or estimated.
+- The controller comparison is configuration-dependent; change only one variable at a time when making conclusions.
+
+## References
+
+1. M. A. Fkirin and M. A.-E. Khira, “Enhanced Antenna Positioning Control System Using Adapted DC Servo Motor and Fuzzy-PI Controller,” *IEEE Access*, vol. 11, pp. 102661-102668, 2023. [DOI: 10.1109/ACCESS.2023.3313976](https://doi.org/10.1109/ACCESS.2023.3313976). Local copy: [PDF](Project_1/Ievgeniia_Enhanced_Antenna_Positioning_Control_System_Using_Adapted_DC_Servo_Motor_and_Fuzzy-PI_Controller.pdf).
+2. MathWorks, “[Simulink Documentation](https://www.mathworks.com/help/simulink/).”
+3. MathWorks, “[PID Controller Tuning](https://www.mathworks.com/help/control/pid-controller-design.html).”
+4. MathWorks, “[`pid` - PID controller in parallel form](https://www.mathworks.com/help/control/ref/pid.html).”
+5. MathWorks, “[`lqr` - Linear-Quadratic Regulator design](https://www.mathworks.com/help/control/ref/lti.lqr.html).”
+6. MathWorks, “[Fuzzy Logic Toolbox Documentation](https://www.mathworks.com/help/fuzzy/).”
+7. MathWorks, “[`pidtune` - PID tuning algorithm for linear plant model](https://www.mathworks.com/help/control/ref/dynamicsystem.pidtune.html).”
+
+## Author
+
+**Ievgeniia Ievgrafova**  
+RMS course project - Slovak University of Technology in Bratislava
+
