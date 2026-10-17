@@ -25,22 +25,22 @@ Three control strategies are studied under the same plant model: a model-tuned P
 <a id="contents"></a>
 
 ## 📑 Table of Contents
-- 🎯 [Project goal](#project-goal)
-- 📚 [Scientific basis](#scientific-basis)
-- 🧭 [Learning map: technologies and concepts](#learning-map-technologies-and-concepts)
-- 📐 [Mathematical model](#mathematical-model)
-- 🎛️ [Controllers](#controllers)
-- 🛠️ [Repository implementation](#repository-implementation)
-- ⚙️ [Parameters and tuning logic](#parameters-and-tuning-logic)
-- 📈 [Results and interpretation](#results-and-interpretation)
-- ▶️ [Getting started](#getting-started)
-- 📂 [Repository structure](#repository-structure)
-- ⚠️ [Limitations](#limitations)
-- 🖼️ [List of figures](#list-of-figures)
-- 📊 [List of tables](#list-of-tables)
-- 📐 [List of equations](#list-of-equations)
-- 📖 [References](#references)
-- 👩‍🎓 [Author](#author)
+- 🎯 [Project goal](#-project-goal)
+- 📚 [Scientific basis](#-scientific-basis)
+- 🧭 [Learning map: technologies and concepts](#-learning-map-technologies-and-concepts)
+- 📐 [Mathematical model](#-mathematical-model)
+- 🎛️ [Controllers](#-controllers)
+- 🛠️ [Repository implementation](#-repository-implementation)
+- ⚙️ [Parameters and tuning logic](#-parameters-and-tuning-logic)
+- 📈 [Results and interpretation](#-results-and-interpretation)
+- ▶️ [Getting started](#-getting-started)
+- 📂 [Repository structure](#-repository-structure)
+- ⚠️ [Limitations](#-limitations)
+- 🖼️ [List of figures](#-list-of-figures)
+- 📊 [List of tables](#-list-of-tables)
+- 📐 [List of equations](#-list-of-equations)
+- 📖 [References](#-references)
+- 👩‍🎓 [Author](#-author)
 
 ---
 ## 🗂️ Lists of figures, tables and equations
