@@ -1,31 +1,84 @@
-# DC Servo Antenna Position Control
+# DC Servo Antenna Position Control 🛰
 
-> MATLAB/Simulink study project for the **RMS** course: modelling the angular position of a DC servo motor used as an antenna drive, then comparing PID, LQR, and Fuzzy-PI control.
+![MATLAB](https://img.shields.io/badge/MATLAB-R2026b-0076A8?logo=Mathworks&logoColor=white)
+![Simulink](https://img.shields.io/badge/Simulink-Model--Based%20Design-FF6F00?logo=Mathworks&logoColor=white)
+![Control System Toolbox](https://img.shields.io/badge/Control%20System-Toolbox-00629B)
+![Fuzzy Logic Toolbox](https://img.shields.io/badge/Fuzzy%20Logic-Toolbox-6A1B9A)
+![PID Control](https://img.shields.io/badge/Control-PID-2E8B57)
+![LQR](https://img.shields.io/badge/Control-LQR-8A2BE2)
+![Fuzzy PI](https://img.shields.io/badge/Control-Fuzzy--PI-FF8C00)
+![Academic Project](https://img.shields.io/badge/Type-Academic%20Project-success)
+[![Research Basis](https://img.shields.io/badge/Research%20Basis-IEEE%20Access%202023-00629B)](https://doi.org/10.1109/ACCESS.2023.3313976)
 
-| English | Slovak | Ukrainian | Russian |
-| :---: | :---: | :---: | :---: |
-| **Current document** | [Slovensky](README_SK.md) | [Українська](README_UA.md) | [Русский](README_RU.md) |
+## About the Project
 
-<p align="center">
-  <img width="2238" height="1170" alt="ALL" src="https://github.com/user-attachments/assets/b99b1e08-b2c0-4087-acc9-326fef248a6d" />
-</p>
+This repository contains my **RMS course project** on modelling and controlling the angular position of a ground-station satellite antenna driven by a DC servo motor. The work is based on the control-system concept presented in the IEEE Access article *Enhanced Antenna Positioning Control System Using Adapted DC Servo Motor and Fuzzy-PI Controller*.
 
-## Contents
+The aim is to command the antenna to a required angle and make the motor position follow that reference accurately, quickly, and with acceptable overshoot and oscillation. The MATLAB script defines the motor parameters, derives both a transfer-function and a state-space model, and prepares the controllers. The Simulink model implements the closed feedback loops and visualizes the reference and the actual motor position.
 
-- [Project goal](#project-goal)
-- [Scientific basis](#scientific-basis)
-- [Learning map: technologies and concepts](#learning-map-technologies-and-concepts)
-- [Mathematical model](#mathematical-model)
-- [Controllers](#controllers)
-- [Repository implementation](#repository-implementation)
-- [Parameters and tuning logic](#parameters-and-tuning-logic)
-- [Results and interpretation](#results-and-interpretation)
-- [Getting started](#getting-started)
-- [Repository structure](#repository-structure)
-- [Limitations](#limitations)
-- [References](#references)
+Three control strategies are studied under the same plant model: a model-tuned PID controller, an LQR full-state-feedback controller, and a Mamdani Fuzzy-PI controller with adaptive proportional and integral gains. The repository is designed both as a reproducible simulation study and as a beginner-friendly example of how mathematical modelling, controller design, and Simulink validation fit together in an antenna-positioning task.
 
-## Project goal
+> Slovak version: [README_SK.md](README_SK.md)
+
+---
+
+<a id="contents"></a>
+
+## 📑 Table of Contents
+- 🎯 [Project goal](#project-goal)
+- 📚 [Scientific basis](#scientific-basis)
+- 🧭 [Learning map: technologies and concepts](#learning-map-technologies-and-concepts)
+- 📐 [Mathematical model](#mathematical-model)
+- 🎛️ [Controllers](#controllers)
+- 🛠️ [Repository implementation](#repository-implementation)
+- ⚙️ [Parameters and tuning logic](#parameters-and-tuning-logic)
+- 📈 [Results and interpretation](#results-and-interpretation)
+- ▶️ [Getting started](#getting-started)
+- 📂 [Repository structure](#repository-structure)
+- ⚠️ [Limitations](#limitations)
+- 🖼️ [List of figures](#list-of-figures)
+- 📊 [List of tables](#list-of-tables)
+- 📐 [List of equations](#list-of-equations)
+- 📖 [References](#references)
+- 👩‍🎓 [Author](#author)
+
+---
+## 🗂️ Lists of figures, tables and equations
+
+<a id="list-of-figures"></a>
+
+### 🖼️ List of figures
+
+1. [Figure 1. PID control loop in Simulink](#fig-pid)
+2. [Figure 2. LQR state-feedback control loop in Simulink](#fig-lqr)
+3. [Figure 3. Mamdani Fuzzy-PI control loop in Simulink](#fig-fuzzy)
+4. [Figure 4. Comparison of simulated antenna-position responses](#fig-results)
+
+<a id="list-of-tables"></a>
+
+### 📊 List of tables
+
+1. [Table 1. Learning map: technologies and concepts](#tab-learning-map)
+2. [Table 2. Motor data used](#tab-motor-data)
+3. [Table 3. Parameters and tuning logic](#tab-tuning)
+4. [Table 4. Results and interpretation](#tab-results)
+
+<a id="list-of-equations"></a>
+
+### 📐 List of equations
+
+1. [Equation 1. State vector](#eq-state-vector)
+2. [Equation 2. Parallel PID law](#eq-pid-law)
+3. [Equation 3. Filtered PID transfer function](#eq-filtered-pid)
+4. [Equation 4. LQR performance index](#eq-lqr-index)
+5. [Equation 5. Fuzzy-PI gain scaling](#eq-fuzzy-gains)
+6. [Equation 6. DC motor electrical and mechanical model](#eq-motor-dynamics)
+7. [Equation 7. Voltage-to-position transfer function](#eq-transfer-function)
+8. [Equation 8. State-space representation](#eq-state-space)
+
+[Back to contents](#contents)
+
+## 🎯 Project goal
 
 This repository is my implementation of a DC servo motor antenna-positioning task. The model accepts a desired antenna angle and simulates the motor position. I used it to explore three approaches to feedback control:
 
@@ -37,7 +90,7 @@ The project is intended as a first practical introduction to control engineering
 
 [Back to contents](#contents)
 
-## Scientific basis
+## 📚 Scientific basis
 
 The model is based on the article by Fkirin and Khira, *Enhanced Antenna Positioning Control System Using Adapted DC Servo Motor and Fuzzy-PI Controller* (IEEE Access, 2023) [1]. The paper studies a ground-data-receiving-station antenna driven by a T-36001 DC servo motor and compares PID, LQR, and Fuzzy-PI approaches.
 
@@ -47,18 +100,22 @@ The included paper is distributed under its stated Creative Commons Attribution-
 
 [Back to contents](#contents)
 
-## Learning map: technologies and concepts
+## 🧭 Learning map: technologies and concepts
+
+<a id="tab-learning-map"></a>
+
+**Table 1. Learning map: technologies and concepts.**
 
 | Topic | What it means | Where to see it in this repository |
 |---|---|---|
-| MATLAB | Numerical environment used to define parameters, transfer functions, state-space models, and controllers. | [`Zadanie_1.m`](Project_1/Zadanie_1.m) |
-| Simulink | Block-diagram environment used to assemble the feedback loops and run time-domain simulations. [2] | [`Zadanie_1_sim.slx`](Project_1/Zadanie_1_sim.slx) |
+| MATLAB | Numerical environment used to define parameters, transfer functions, state-space models, and controllers. | [`Zadanie_1.m`](Zadanie_1.m) |
+| Simulink | Block-diagram environment used to assemble the feedback loops and run time-domain simulations. [2] | [`Zadanie_1_sim.slx`](Zadanie_1_sim.slx) |
 | Transfer function | Input-output description in the Laplace domain: `G(s) = Theta(s)/Va(s)`. | `num`, `den`, and `G = tf(num,den)` |
 | State-space model | First-order vector model `xdot = Ax + Bu`, `y = Cx + Du`; needed for LQR. | `A`, `B`, `C`, `D` in `Zadanie_1.m` |
 | PID control | Feedback law built from proportional, integral, and derivative actions. [3][4] | PID branch of the model |
 | LQR | State-feedback method minimizing a quadratic trade-off between state error and control effort. [5] | LQR branch and `lqr(A,B,Q,R)` |
-| Fuzzy inference | Rule-based controller using linguistic membership functions and Mamdani inference. [6] | [`Fuzzy_PI.fis`](Project_1/Fuzzy_PI.fis) |
-| Validation by simulation | Compare reference tracking, overshoot, oscillation, and settling behaviour before hardware testing. | [`ALL.png`](Project_1/ALL.png) |
+| Fuzzy inference | Rule-based controller using linguistic membership functions and Mamdani inference. [6] | [`Fuzzy_PI.fis`](Fuzzy_PI.fis) |
+| Validation by simulation | Compare reference tracking, overshoot, oscillation, and settling behaviour before hardware testing. | Simulink Scope blocks |
 
 ### MATLAB and Simulink
 
@@ -68,6 +125,10 @@ MATLAB provides the numerical model and controller-design commands. Simulink tur
 
 A transfer function is useful when the main question is: *how does output position change when armature voltage changes?* A state-space model is useful when internal variables such as armature current and angular velocity also matter. Here the state vector is
 
+<a id="eq-state-vector"></a>
+
+**Equation 1. State vector.**
+
 $$x = \begin{bmatrix} i_a & \omega & \theta \end{bmatrix}^{T},$$
 
 where $i_a$ is armature current, $\omega$ is angular velocity, and $\theta$ is angular position in radians.
@@ -75,6 +136,10 @@ where $i_a$ is armature current, $\omega$ is angular velocity, and $\theta$ is a
 ### PID control in plain language
 
 For error $e(t)=r(t)-\theta(t)$, a parallel continuous-time PID controller is
+
+<a id="eq-pid-law"></a>
+
+**Equation 2. Parallel PID law.**
 
 $$u(t)=K_p e(t)+K_i\int_0^t e(\tau)\,d\tau+K_d\frac{de(t)}{dt}.$$
 
@@ -84,11 +149,19 @@ $$u(t)=K_p e(t)+K_i\int_0^t e(\tau)\,d\tau+K_d\frac{de(t)}{dt}.$$
 
 The MATLAB `pid` representation used by `pidtune` includes a first-order derivative filter [4]:
 
+<a id="eq-filtered-pid"></a>
+
+**Equation 3. Filtered PID transfer function.**
+
 $$C(s)=K_p+\frac{K_i}{s}+\frac{K_d s}{T_f s+1}.$$
 
 ### LQR in plain language
 
 LQR chooses the state-feedback input $u=-Kx$ to minimize
+
+<a id="eq-lqr-index"></a>
+
+**Equation 4. LQR performance index.**
 
 $$J=\int_0^\infty \left(x^TQx+u^TRu\right)dt.$$
 
@@ -98,14 +171,22 @@ $$J=\int_0^\infty \left(x^TQx+u^TRu\right)dt.$$
 
 Fuzzy logic replaces one fixed formula for the gains with rules such as “if error is positive high and changing quickly, use a high/low gain.” The controller here has two inputs - `Error` and `ChangeError` - and two outputs - normalized `Kp` and `Ki`. It uses seven Gaussian membership functions for each input and 49 Mamdani rules. The actual gains are recovered by output scaling:
 
+<a id="eq-fuzzy-gains"></a>
+
+**Equation 5. Fuzzy-PI gain scaling.**
+
 $$K_p(t)=G_{Kp}K_{p,\mathrm{fuzzy}}(t),\qquad
 K_i(t)=G_{Ki}K_{i,\mathrm{fuzzy}}(t).$$
 
 [Back to contents](#contents)
 
-## Mathematical model
+## 📐 Mathematical model
 
 The armature circuit and mechanical dynamics are represented by
+
+<a id="eq-motor-dynamics"></a>
+
+**Equation 6. DC motor electrical and mechanical model.**
 
 $$V_a(t)=R_a i_a(t)+L_a\frac{di_a(t)}{dt}+K_b\omega(t),$$
 
@@ -113,10 +194,18 @@ $$J_m\frac{d\omega(t)}{dt}+B_m\omega(t)=K_t i_a(t),\qquad \dot{\theta}(t)=\omega
 
 With zero initial conditions, the voltage-to-position transfer function is [1]
 
+<a id="eq-transfer-function"></a>
+
+**Equation 7. Voltage-to-position transfer function.**
+
 $$G(s)=\frac{\Theta(s)}{V_a(s)}=
 \frac{K_t}{s\left[(R_a+L_a s)(J_m s+B_m)+K_tK_b\right]}.$$
 
 The equivalent state-space representation used for the LQR experiment is
+
+<a id="eq-state-space"></a>
+
+**Equation 8. State-space representation.**
 
 $$\dot{x}=Ax+Bu,\qquad y=Cx+Du,$$
 
@@ -131,6 +220,10 @@ C=\begin{bmatrix}0&0&180/\pi\end{bmatrix}.$$
 `C` converts the simulated position from radians to degrees for the state-space output. The project keeps the physical controller model in radians: `Deg` is the human-readable target in degrees, while `Ref = Deg*pi/180` is the corresponding simulation reference in radians.
 
 ### Motor data used
+
+<a id="tab-motor-data"></a>
+
+**Table 2. Motor data used.**
 
 | Symbol | Meaning | Value used in code |
 |---|---|---:|
@@ -147,14 +240,17 @@ The numerical values above are taken from the project source and follow the moto
 
 [Back to contents](#contents)
 
-## Controllers
+## 🎛️ Controllers
 
 ### PID branch
 
-<p align="center">
-  <img width="793" height="147" alt="PID_Scheme" src="https://github.com/user-attachments/assets/23735932-f219-45c6-88d0-50e975695eab" />
-</p>
+<a id="fig-pid"></a>
 
+**Figure 1. PID control loop in Simulink.** The reference position is compared with the measured motor position; the PID block converts the error into the motor control signal.
+
+<p align="center">
+  <img width="793" height="147" alt="PID control scheme" src="https://github.com/user-attachments/assets/23735932-f219-45c6-88d0-50e975695eab" />
+</p>
 The script creates the plant with `tf` and obtains the controller programmatically:
 
 ```matlab
@@ -170,10 +266,13 @@ This is not trial-and-error: `pidtune` designs a PID controller for the linear m
 
 ### LQR branch
 
-<p align="center">
-  <img width="1360" height="217" alt="LQR_Scheme" src="https://github.com/user-attachments/assets/e7e5f1f7-9897-424f-a535-fc09efdf6fab" />
-</p>
+<a id="fig-lqr"></a>
 
+**Figure 2. LQR state-feedback control loop in Simulink.** The state vector is multiplied by the calculated gain `K_lqr`; the resulting control action drives the state-space motor model.
+
+<p align="center">
+  <img width="1360" height="217" alt="LQR control scheme" src="https://github.com/user-attachments/assets/e7e5f1f7-9897-424f-a535-fc09efdf6fab" />
+</p>
 The project uses full-state feedback and calculates `K_lqr` with MATLAB's `lqr` function.
 
 ```matlab
@@ -186,10 +285,13 @@ The matrix `Q` weights current, speed, and angle equally in this experiment. The
 
 ### Fuzzy-PI branch
 
-<p align="center">
-  <img width="1546" height="217" alt="Fuzzy_Scheme" src="https://github.com/user-attachments/assets/ea786de8-078d-4e58-b375-f1f0c505e5b9" />
-</p>
+<a id="fig-fuzzy"></a>
 
+**Figure 3. Mamdani Fuzzy-PI control loop in Simulink.** Error and change of error enter the FIS, whose normalized outputs are scaled to time-varying proportional and integral gains.
+
+<p align="center">
+  <img width="1546" height="217" alt="Fuzzy-PI control scheme" src="https://github.com/user-attachments/assets/ea786de8-078d-4e58-b375-f1f0c505e5b9" />
+</p>
 `Fuzzy_PI.fis` defines a Mamdani FIS with `min` implication, `max` aggregation, and centroid defuzzification. The script loads it through `readfis` and sets the following scales:
 
 ```matlab
@@ -203,7 +305,7 @@ The two input variables are normalized error and error change. The FIS output is
 
 [Back to contents](#contents)
 
-## Repository implementation
+## 🛠️ Repository implementation
 
 The central workflow is:
 
@@ -221,11 +323,15 @@ Reference angle (Deg --> Ref in rad) --------------------------+
 4. `Zadanie_1_sim.slx` uses these workspace variables in its controller blocks.
 5. The scopes and exported plots show reference and motor position.
 
-The project contains MATLAB `.fig` files as editable figures and `.png` files as portable previews.
+The simulation results are viewed directly in the Simulink Scope blocks.
 
 [Back to contents](#contents)
 
-## Parameters and tuning logic
+## ⚙️ Parameters and tuning logic
+
+<a id="tab-tuning"></a>
+
+**Table 3. Parameters and tuning logic.**
 
 | Controller | Parameters in this implementation | Selection logic | Reproducibility note |
 |---|---|---|---|
@@ -242,25 +348,32 @@ When comparing controllers, use the same reference and simulation configuration.
 
 [Back to contents](#contents)
 
-## Results and interpretation
+## 📈 Results and interpretation
 
-The checked-in comparison plot uses `Deg = 150`, i.e. $150\pi/180 \approx 2.618$ rad.
+For the default simulation, `Deg = 150`, i.e. $150\pi/180 \approx 2.618$ rad. Run the Simulink model and compare the traces in the Scope blocks using the same reference angle.
+<a id="fig-results"></a>
+
+**Figure 4. Comparison of simulated antenna-position responses.** The yellow trace is the reference angle; the controller responses show how quickly and smoothly the antenna position follows it.
 
 <p align="center">
-  <img width="2238" height="1170" alt="ALL" src="https://github.com/user-attachments/assets/2fff9ea7-b040-4d7c-9ff3-ae9a578ca18f" />
+  <img width="2238" height="1170" alt="Simulated antenna-position responses" src="https://github.com/user-attachments/assets/2fff9ea7-b040-4d7c-9ff3-ae9a578ca18f" />
 </p>
 
-| Controller | Observation from the included plot | Interpretation |
-|---|---|---|
-| PID | Fast initial response, but the largest visible overshoot and decaying oscillation in this configuration. | A faster loop is not automatically a better loop; transient constraints matter. |
-| LQR | Reaches the reference with the smallest visible overshoot for the checked-in `Q` and `R`. | The chosen quadratic weights strongly penalize state error relative to input effort. |
-| Fuzzy-PI | Tracks the reference with a smoother initial rise than the checked-in PID curve, while still showing overshoot. | Adaptive gains change the transient behaviour; performance depends on rule base and scaling. |
+<a id="tab-results"></a>
 
-These statements describe the **included simulation plot only**. They are not universal rankings of PID, LQR, and Fuzzy-PI controllers, and they do not replace metrics produced by a controlled parameter sweep or hardware experiment. The source paper reports its own experimental comparison under its own settings. [1]
+**Table 4. Results and interpretation.**
+
+| Controller | What to evaluate in your simulation | Interpretation |
+|---|---|---|
+| PID | Rise time, overshoot, and oscillation. | A faster loop is not automatically a better loop; transient constraints matter. |
+| LQR | Reference tracking using the configured `Q` and `R` values. | The quadratic weights determine the trade-off between state error and control effort. |
+| Fuzzy-PI | Tracking using the FIS rule base and configured scaling factors. | Adaptive gains change the transient behaviour; performance depends on rule base and scaling. |
+
+The final comparison should be made from the traces produced by your own run of the model. PID, LQR, and Fuzzy-PI do not have a universal ranking: the outcome depends on the plant, controller settings, reference, and performance criterion. The source paper reports its own experimental comparison under its own settings. [1]
 
 [Back to contents](#contents)
 
-## Getting started
+## ▶️ Getting started
 
 ### Requirements
 
@@ -271,7 +384,7 @@ These statements describe the **included simulation plot only**. They are not un
 ### Run the study
 
 1. Clone or download this repository.
-2. In MATLAB, set the Current Folder to `Project_1`.
+2. In MATLAB, set the Current Folder to the repository root (the folder containing `Zadanie_1.m`).
 3. Run:
 
    ```matlab
@@ -294,28 +407,26 @@ The Simulink **Tune...** button can require a Simulink Control Design license. T
 
 [Back to contents](#contents)
 
-## Repository structure
+## 📂 Repository structure
 
 ```text
-RMS/
-├── README.md                         # English documentation
-├── README_SK.md                      # Slovak overview
-└── Project_1/
-    ├── Zadanie_1.m                   # Parameters, plant, controller design
-    ├── Zadanie_1_sim.slx             # Simulink model
-    ├── Fuzzy_PI.fis                  # Mamdani Fuzzy-PI inference system
+Project root/
+├── README.md              # English documentation
+├── README_SK.md           # Slovak overview
+├── Zadanie_1.m            # Parameters, plant, controller design
+├── Zadanie_1_sim.slx      # Simulink model
+└── Fuzzy_PI.fis           # Mamdani Fuzzy-PI inference system
 ```
-
-## Limitations
+## ⚠️ Limitations
 
 - This is a simulation study, not a real-time hardware controller.
 - The plant is linear and does not include actuator saturation, sensor noise, gear backlash, parameter uncertainty, or load disturbances unless added by the user.
 - LQR full-state feedback assumes the required states are measured or estimated.
 - The controller comparison is configuration-dependent; change only one variable at a time when making conclusions.
 
-## References
+## 📖 References
 
-1. M. A. Fkirin and M. A.-E. Khira, “Enhanced Antenna Positioning Control System Using Adapted DC Servo Motor and Fuzzy-PI Controller,” *IEEE Access*, vol. 11, pp. 102661-102668, 2023. [DOI: 10.1109/ACCESS.2023.3313976](https://doi.org/10.1109/ACCESS.2023.3313976). Local copy: [PDF](Project_1/Ievgeniia_Enhanced_Antenna_Positioning_Control_System_Using_Adapted_DC_Servo_Motor_and_Fuzzy-PI_Controller.pdf).
+1. M. A. Fkirin and M. A.-E. Khira, “Enhanced Antenna Positioning Control System Using Adapted DC Servo Motor and Fuzzy-PI Controller,” *IEEE Access*, vol. 11, pp. 102661-102668, 2023. [DOI: 10.1109/ACCESS.2023.3313976](https://doi.org/10.1109/ACCESS.2023.3313976).
 2. MathWorks, “[Simulink Documentation](https://www.mathworks.com/help/simulink/).”
 3. MathWorks, “[PID Controller Tuning](https://www.mathworks.com/help/control/pid-controller-design.html).”
 4. MathWorks, “[`pid` - PID controller in parallel form](https://www.mathworks.com/help/control/ref/pid.html).”
@@ -323,8 +434,14 @@ RMS/
 6. MathWorks, “[Fuzzy Logic Toolbox Documentation](https://www.mathworks.com/help/fuzzy/).”
 7. MathWorks, “[`pidtune` - PID tuning algorithm for linear plant model](https://www.mathworks.com/help/control/ref/dynamicsystem.pidtune.html).”
 
-## Author
+## 👩‍🎓 Author
 
-**Ievgeniia Ievgrafova**  
-RMS course project - Slovak University of Technology in Bratislava
+**Ievgeniia Ievgrafova**
 
+RMS course project 
+
+Faculty of Electrical Engineering and Information Technology
+
+Slovak University of Technology in Bratislava
+
+2026
