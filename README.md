@@ -24,30 +24,30 @@ Three control strategies are studied under the same plant model: a model-tuned P
 
 <a id="contents"></a>
 
-## 📑 Table of Contents
-- 🎯 [Project goal](#-project-goal)
-- 📚 [Scientific basis](#-scientific-basis)
-- 🧭 [Learning map: technologies and concepts](#-learning-map-technologies-and-concepts)
-- 📐 [Mathematical model](#-mathematical-model)
-- 🎛️ [Controllers](#-controllers)
-- 🛠️ [Repository implementation](#-repository-implementation)
-- ⚙️ [Parameters and tuning logic](#-parameters-and-tuning-logic)
-- 📈 [Results and interpretation](#-results-and-interpretation)
-- ▶️ [Getting started](#-getting-started)
-- 📂 [Repository structure](#-repository-structure)
-- ⚠️ [Limitations](#-limitations)
-- 🖼️ [List of figures](#-list-of-figures)
-- 📊 [List of tables](#-list-of-tables)
-- 📐 [List of equations](#-list-of-equations)
-- 📖 [References](#-references)
-- 👩‍🎓 [Author](#-author)
+## Table of Contents
+- [Project goal](#-project-goal)
+- [Scientific basis](#-scientific-basis)
+- [Learning map: technologies and concepts](#-learning-map-technologies-and-concepts)
+- [Mathematical model](#-mathematical-model)
+- [Controllers](#-controllers)
+- [Repository implementation](#-repository-implementation)
+- [Parameters and tuning logic](#-parameters-and-tuning-logic)
+- [Results and interpretation](#-results-and-interpretation)
+- [Getting started](#-getting-started)
+- [Repository structure](#-repository-structure)
+- [Limitations](#-limitations)
+- [List of figures](#-list-of-figures)
+- [List of tables](#-list-of-tables)
+- [List of equations](#-list-of-equations)
+- [References](#-references)
+- [Author](#-author)
 
 ---
-## 🗂️ Lists of figures, tables and equations
+## Lists of figures, tables and equations
 
 <a id="list-of-figures"></a>
 
-### 🖼️ List of figures
+### List of figures
 
 1. [Figure 1. PID control loop in Simulink](#fig-pid)
 2. [Figure 2. LQR state-feedback control loop in Simulink](#fig-lqr)
@@ -56,7 +56,7 @@ Three control strategies are studied under the same plant model: a model-tuned P
 
 <a id="list-of-tables"></a>
 
-### 📊 List of tables
+### List of tables
 
 1. [Table 1. Learning map: technologies and concepts](#tab-learning-map)
 2. [Table 2. Motor data used](#tab-motor-data)
@@ -65,7 +65,7 @@ Three control strategies are studied under the same plant model: a model-tuned P
 
 <a id="list-of-equations"></a>
 
-### 📐 List of equations
+### List of equations
 
 1. [Equation 1. State vector](#eq-state-vector)
 2. [Equation 2. Parallel PID law](#eq-pid-law)
@@ -78,7 +78,7 @@ Three control strategies are studied under the same plant model: a model-tuned P
 
 [Back to contents](#contents)
 
-## 🎯 Project goal
+## Project goal
 
 This repository is my implementation of a DC servo motor antenna-positioning task. The model accepts a desired antenna angle and simulates the motor position. I used it to explore three approaches to feedback control:
 
@@ -90,7 +90,7 @@ The project is intended as a first practical introduction to control engineering
 
 [Back to contents](#contents)
 
-## 📚 Scientific basis
+## Scientific basis
 
 The model is based on the article by Fkirin and Khira, *Enhanced Antenna Positioning Control System Using Adapted DC Servo Motor and Fuzzy-PI Controller* (IEEE Access, 2023) [1]. The paper studies a ground-data-receiving-station antenna driven by a T-36001 DC servo motor and compares PID, LQR, and Fuzzy-PI approaches.
 
@@ -100,7 +100,7 @@ The included paper is distributed under its stated Creative Commons Attribution-
 
 [Back to contents](#contents)
 
-## 🧭 Learning map: technologies and concepts
+## Learning map: technologies and concepts
 
 <a id="tab-learning-map"></a>
 
@@ -180,7 +180,7 @@ K_i(t)=G_{Ki}K_{i,\mathrm{fuzzy}}(t).$$
 
 [Back to contents](#contents)
 
-## 📐 Mathematical model
+## Mathematical model
 
 The armature circuit and mechanical dynamics are represented by
 
@@ -240,7 +240,7 @@ The numerical values above are taken from the project source and follow the moto
 
 [Back to contents](#contents)
 
-## 🎛️ Controllers
+## Controllers
 
 ### PID branch
 
@@ -305,7 +305,7 @@ The two input variables are normalized error and error change. The FIS output is
 
 [Back to contents](#contents)
 
-## 🛠️ Repository implementation
+## Repository implementation
 
 The central workflow is:
 
@@ -327,7 +327,7 @@ The simulation results are viewed directly in the Simulink Scope blocks.
 
 [Back to contents](#contents)
 
-## ⚙️ Parameters and tuning logic
+## Parameters and tuning logic
 
 <a id="tab-tuning"></a>
 
@@ -348,7 +348,7 @@ When comparing controllers, use the same reference and simulation configuration.
 
 [Back to contents](#contents)
 
-## 📈 Results and interpretation
+## Results and interpretation
 
 For the default simulation, `Deg = 150`, i.e. $150\pi/180 \approx 2.618$ rad. Run the Simulink model and compare the traces in the Scope blocks using the same reference angle.
 <a id="fig-results"></a>
@@ -373,7 +373,7 @@ The final comparison should be made from the traces produced by your own run of 
 
 [Back to contents](#contents)
 
-## ▶️ Getting started
+## Getting started
 
 ### Requirements
 
@@ -407,7 +407,7 @@ The Simulink **Tune...** button can require a Simulink Control Design license. T
 
 [Back to contents](#contents)
 
-## 📂 Repository structure
+## Repository structure
 
 ```text
 Project root/
@@ -417,14 +417,14 @@ Project root/
 ├── Zadanie_1_sim.slx      # Simulink model
 └── Fuzzy_PI.fis           # Mamdani Fuzzy-PI inference system
 ```
-## ⚠️ Limitations
+## Limitations
 
 - This is a simulation study, not a real-time hardware controller.
 - The plant is linear and does not include actuator saturation, sensor noise, gear backlash, parameter uncertainty, or load disturbances unless added by the user.
 - LQR full-state feedback assumes the required states are measured or estimated.
 - The controller comparison is configuration-dependent; change only one variable at a time when making conclusions.
 
-## 📖 References
+## References
 
 1. M. A. Fkirin and M. A.-E. Khira, “Enhanced Antenna Positioning Control System Using Adapted DC Servo Motor and Fuzzy-PI Controller,” *IEEE Access*, vol. 11, pp. 102661-102668, 2023. [DOI: 10.1109/ACCESS.2023.3313976](https://doi.org/10.1109/ACCESS.2023.3313976).
 2. MathWorks, “[Simulink Documentation](https://www.mathworks.com/help/simulink/).”
@@ -434,7 +434,7 @@ Project root/
 6. MathWorks, “[Fuzzy Logic Toolbox Documentation](https://www.mathworks.com/help/fuzzy/).”
 7. MathWorks, “[`pidtune` - PID tuning algorithm for linear plant model](https://www.mathworks.com/help/control/ref/dynamicsystem.pidtune.html).”
 
-## 👩‍🎓 Author
+## Author
 
 **Ievgeniia Ievgrafova**
 
